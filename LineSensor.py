@@ -27,56 +27,56 @@ def lineDetector():
 	
 	# Case 1: Line detected front left
 	# Do: - BW+CW - left motor FW - right motor BW - LED 1 High
-    if not GPIO.input(laserPin1):
-		GPIO.output(ledPin4, GPIO.LOW)
-        GPIO.output(ledPin1, GPIO.HIGH)
-		navigation (m1B,m2B,100,100)	
-		# Continue going BWD while the sensor is still seeing the line			
-		while not GPIO.input(laserPin1):
-			#None
-		# Go BWD extra time for safety
-		time.sleep(safetyDelay)
-		navigation (m1F,m2B,100,100)
-		
+	if not GPIO.input(laserPin1):
+	GPIO.output(ledPin4, GPIO.LOW)
+	GPIO.output(ledPin1, GPIO.HIGH)
+	navigation (m1B,m2B,100,100)	
+	# Continue going BWD while the sensor is still seeing the line			
+	while not GPIO.input(laserPin1):
+		#None
+	# Go BWD extra time for safety
+	time.sleep(safetyDelay)
+	navigation (m1F,m2B,100,100)
+
 	# Case 2: Line detected back right
 	# Do: - FW+CCW - left motor BW - right motor FW - LED 4 High	
 	elif not GPIO.input(laserPin4):
-		GPIO.output(ledPin1, GPIO.LOW)
-		GPIO.output(ledPin4, GPIO.HIGH)
-		navigation (m1F,m2F,100,100)	
-		# Continue going FWD while the sensor is still seeing the line			
-		while not GPIO.input(laserPin4):
-			#None
-		# Go FWD for extra time for safety
-		time.sleep(safetyDelay)
-		navigation (m1B,m2F,100,100)
+	GPIO.output(ledPin1, GPIO.LOW)
+	GPIO.output(ledPin4, GPIO.HIGH)
+	navigation (m1F,m2F,100,100)	
+	# Continue going FWD while the sensor is still seeing the line			
+	while not GPIO.input(laserPin4):
+		#None
+	# Go FWD for extra time for safety
+	time.sleep(safetyDelay)
+	navigation (m1B,m2F,100,100)
 
 	# Case 3: Line detected front right
 	# Do: - BW+CCW - left motor BW - right motor FW - LED 1 High
-    if not GPIO.input(laserPin2):
-		GPIO.output(ledPin3, GPIO.LOW)
-		GPIO.output(ledPin2, GPIO.HIGH)
-		navigation (m1B,m2B,100,100)	
-		# Continue going BWD while the sensor is still seeing the line			
-		while not GPIO.input(laserPin2):
-			#None
-		# Go BWD for extra time for safety
-		time.sleep(safetyDelay)
-		navigation (m1B,m2F,100,100)
-		
+	if not GPIO.input(laserPin2):
+	GPIO.output(ledPin3, GPIO.LOW)
+	GPIO.output(ledPin2, GPIO.HIGH)
+	navigation (m1B,m2B,100,100)	
+	# Continue going BWD while the sensor is still seeing the line			
+	while not GPIO.input(laserPin2):
+		#None
+	# Go BWD for extra time for safety
+	time.sleep(safetyDelay)
+	navigation (m1B,m2F,100,100)
+
 	# Case 4: Line detected back left
 	# Do: - FW+CW - left motor FW - right motor BW - LED 3 High
 	elif not GPIO.input(laserPin3):
-		GPIO.output(ledPin2, GPIO.LOW)
-		GPIO.output(ledPin3, GPIO.HIGH)
-		navigation (m1F,m2F,100,100)	
-		# Continue going FWD while the sensor is still seeing the line			
-		while not GPIO.input(laserPin3):
-			#None
-		# Go FWD for extra time for safety
-		time.sleep(safetyDelay)
-		navigation (m1F,m2B,100,100)
-	
+	GPIO.output(ledPin2, GPIO.LOW)
+	GPIO.output(ledPin3, GPIO.HIGH)
+	navigation (m1F,m2F,100,100)	
+	# Continue going FWD while the sensor is still seeing the line			
+	while not GPIO.input(laserPin3):
+		#None
+	# Go FWD for extra time for safety
+	time.sleep(safetyDelay)
+	navigation (m1F,m2B,100,100)
+
 
 GPIO.setmode(GPIO.BCM)
 
