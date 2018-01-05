@@ -1,6 +1,1 @@
--Sprint 1
--tackle the desgin (Soldworks/ Sketchup)
--Detection of the white line
--Do more research
--register to sumo wars...
--
+
