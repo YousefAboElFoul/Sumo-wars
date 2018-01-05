@@ -7,10 +7,10 @@ import RPi.GPIO as GPIO
 import time
 GPIO.setmode(GPIO.BCM)
 
-laserPin1 = 14 # Front left sensor
+laserPin1 = 24 # Front left sensor
 laserPin2 = 15 # Front right sensor
 laserPin3 = 18 # Back left sensor
-laserPin4 = 24 # Back right sensor
+laserPin4 = 14 # Back right sensor
 ledPin1 = 23 
 ledPin2 = 25 
 ledPin3 = 25
@@ -57,7 +57,7 @@ def navigation (mode1, mode2, dc1, dc2):
 def B_brake(t):
 	counter = 0
 	while counter != t:
-                time.sleep(1)
+        time.sleep(1)
 		counter += 1
 		nav(m1B, m2B, 100, 100) #Moving backward
 
@@ -85,50 +85,57 @@ def Rotate_anti_clockwise(t):
 		counter += 1
 		nav(m1B, m2F, 100, 100) #Rotate
 		
-# Returns a dictionary with keys set to TRUE if the corresponding sensor detected white line 
 def lineDetector():
-	# Case 1: sensor 1 and sensor 2: Line detected front left and front right
-	while not GPIO.input(laserPin1) or not GPIO.input(laserPin2):
-            #LED activated to indicate sensor detection
-            GPIO.output(ledPin1, GPIO.LOW)
-            GPIO.output(ledPin2, GPIO.HIGH)
-            #Brake and backup continiously as condition hold
-            navigation(m1B, m2B, 100, 100)
-            #Check again and perform extra backup for security
-            if GPIO.input(laserPin1) == False or GPIO.input(laserPin2) == False:
-                B_brake(1) #Backup and brake extra t second                
+	sensors = {'sen1': False, 'sen2': False, 'sen3': False, 'sen4': False}
+	sensors['sen1'] = not GPIO.input(laserPin1)
+	sensors['sen2'] = not GPIO.input(laserPin2)
+	sensors['sen3'] = not GPIO.input(laserPin3)
+	sensors['sen4'] = not GPIO.input(laserPin4)
+
+	
+	# Case 1: sensor 1 or sensor 2: Line detected front left and front right
+	if sensors['sen1'] or sensors['sen2']:
+		#LED activated to indicate sensor detection
+		GPIO.output(ledPin1, GPIO.HIGH)
+		#Brake and backup continiously as condition hold
+		navigation(m1B, m2B, 100, 100)
+		while not GPIO.input(laserPin1) or not GPIO.input(laserPin2):
+			pass
+		#Check again and perform extra backup for security
+		time.sleep(safetyDelay) #Backup and brake extra t second      
+		GPIO.output(ledPin1, GPIO.LOW)
+ 				
 
 	# Case 2: sensor 3 and sensor 4: Line detected back right and back left
-	while not GPIO.input(laserPin3) or not GPIO.input(laserPin4):
-            #LED activated to indicate sensor detection
-            if not GPIO.input(laserPin3):
-                GPIO.output(ledPin3, GPIO.HIGH)
-            if not GPIO.input(laserPin4):
-                GPIO.output(ledPin4, GPIO.HIGH)
-            #Moving forward continiously as condition hold
-            navigation(m1F, m2F, 100, 100)
-            #Check again and perform extra backup for security
-            #We might have a brake here. Will decide through testing.
-            if GPIO.input(laserPin3) == False or GPIO.input(laserPin4) == False:
-                Forward(1) #Moving forward extra t second
+	if sensors['sen3'] or sensors['sen4']:
+		#LED activated to indicate sensor detection
+		GPIO.output(ledPin2, GPIO.HIGH)
+		#Moving forward continiously as condition hold
+		navigation(m1F, m2F, 100, 100)
+		while not GPIO.input(laserPin3) or not GPIO.input(laserPin4):
+			pass	
+		#Check again and perform extra backup for security
+		time.sleep(safetyDelay) #Backup and brake extra t second      
+		GPIO.output(ledPin2, GPIO.LOW)
 
-        # Case 3: sensor 1 and sensor 3: Line detected front left & back right
-        # Think about being attacked by the enemy in this case, what should we do?
-        while not GPIO.input(laserPin1) and not GPIO.input(laserPin3):
-            Rotate_clockwise(2) #Rotate to change direction
-            navigation(m1F, m2F, 100, 100) #Moving away from white line
-            #Security check and perform forward in extra t second
-            if GPIO.input(laserPin1) == False or GPIO.input(laserPin3) == False:
-                Forward(1) #Moving forward extra t second
 
-        # Case 3: sensor 1 and sensor 3: Line detected front left & back right
-        # Think about being attacked by the enemy in this case, what should we do?
-        while not GPIO.input(laserPin2) and not GPIO.input(laserPin4):
-            Rotate_anti_clockwise(2) #Rotate to change direction
-            navigation(m1F, m2F, 100, 100) #Moving away from white line
-            #Security check and perform forward in extra t second
-            if GPIO.input(laserPin2) == False or GPIO.input(laserPin4) == False:
-                Forward(1) #Moving forward extra t second
+    # Case 3: sensor 1 and sensor 3: Line detected front left & back right
+    # Think about being attacked by the enemy in this case, what should we do?
+	if sensors['sen1'] and sensors['sen3']:
+		Rotate_clockwise(2) #Rotate to change direction
+		navigation(m1F, m2F, 100, 100) #Moving away from white line
+		#Security check and perform forward in extra t second
+		if GPIO.input(laserPin1) == False or GPIO.input(laserPin3) == False:
+			Forward(1) #Moving forward extra t second
+
+	# Case 3: sensor 1 and sensor 3: Line detected front left & back right
+	# Think about being attacked by the enemy in this case, what should we do?
+	if sensors['sen2'] and sensors['sen4']:
+		Rotate_anti_clockwise(2) #Rotate to change direction
+		navigation(m1F, m2F, 100, 100) #Moving away from white line
+		#Security check and perform forward in extra t second
+		if GPIO.input(laserPin2) == False or GPIO.input(laserPin4) == False:
+			Forward(1) #Moving forward extra t second
 
 
 print ("press CTRL + C to exit")
