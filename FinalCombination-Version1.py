@@ -48,10 +48,21 @@ m2F = GPIO.PWM(motor2FPin,50) #Motor 2 forward direction speed control
 m2B = GPIO.PWM(motor2BPin,50) #Motor 2 reverse direction speed control
 
 # Controls the motors setting
-def navigation (mode1, mode2, dc1, dc2):
-        mode1.ChangeDutyCycle(dc1)
-        mode2.ChangeDutyCycle(dc2)
-        time.sleep(0.01)
+#def navigation (mode1, mode2, dc1, dc2):
+#        mode1.ChangeDutyCycle(dc1)
+#        mode2.ChangeDutyCycle(dc2)
+#        time.sleep(0.01)
+
+
+#To go forward: m1mode1 = GPIO.HIGH, m1mode2 = GPIO.LOW, m2mode1=GPIO.HIGH, m2mode2 = GPIO.LOW
+#To go backward: m1mode1=GPIO.LOW, m1mode2 = GPIO.HIGH, m2mode1=GPIO.LOW, m2mode2 = GPIO.HIGH
+#To rotate CW: m1mode1 = GPIO.HIGH, m1mode2 = GPIO.LOW, m2mode1=GPIO.LOW, m2mode2 = GPIO.HIGH
+#To rotate CCW: m1mode1=GPIO.LOW, m1mode2 = GPIO.HIGH, m2mode1=GPIO.HIGH, m2mode2 = GPIO.LOW
+def navigation (m1mode1, m1mode2, m2mode1, m2mode2):
+	GPIO.output(m1pin1,m1mode1)  #Motor 1 - Input 1 set to High
+	GPIO.output(m1pin2,m1mode2) #Motor 2 - Input 3 set to High
+	GPIO.output(m2pin1,m2mode1)   #Motor 1 - Input 2 set to Low
+	GPIO.output(m2pin2,m2mode2)  #Motor 2 - Input 4 set to Low
         
 def B_brake(t):
      counter = 0
