@@ -5,6 +5,7 @@ class QTR_8RC:
     """ Class for reading values from Pololu QT8-8RC sensor array.
     """
  
+<<<<<<< HEAD
     def __init__(self):
         self.LEDON_PIN = 16
         self.SENSOR_PINS = [18]
@@ -15,6 +16,17 @@ class QTR_8RC:
         self.sensorValues = [0] * self.NUM_SENSORS
         self.maxValue = 1e-3
         self.midValue = self.maxValue / 2
+=======
+    def __init__(self, SENSOR_PINS):
+        self.SENSOR_PINS = SENSOR_PINS
+        
+        self.NUM_SENSORS = len(self.SENSOR_PINS)
+        self.CHARGE_TIME = 10*1e-6 #10 us to charge the capacitors
+        self.READING_TIMEOUT = 1e-3 #1 ms, assume reading is black
+        self.sensorValues = [0] * self.NUM_SENSORS
+        self.maxValue = 1e-3
+        self.threshold = 0.1*self.maxValue
+>>>>>>> master
 
 
     def read_sensors(self):
@@ -52,6 +64,7 @@ class QTR_8RC:
             
     def checkWhite (self):
         for i in range(0, self.NUM_SENSORS):
+<<<<<<< HEAD
             if self.sensorValues[i] < self.midValue:
                 return True
         return False
@@ -74,3 +87,43 @@ if __name__ == "__main__":
 
     except KeyboardInterrupt:
         GPIO.cleanup()
+=======
+            if self.sensorValues[i] < self.threshold:
+                return True
+        return False
+
+    def print_sensor_values(self):
+        """ Params: values - a list of sensor values to print
+            Prints out the sensor and it's current recorded reading.
+        """
+        for i in range(0, self.NUM_SENSORS):
+            print("sensor %d, reading %d" % (i, self.sensorValues[i]))
+
+##if __name__ == "__main__":
+##    try:
+##        GPIO.setmode(GPIO.BOARD)
+##        qtr1 = QTR_8RC([18],16)
+##        qtr2 = QTR_8RC([24],22)
+##
+##
+##        while 1:
+##            qtr1.read_sensors()            
+##            qtr2.read_sensors()
+##            #qtr.print_sensor_values()
+##        
+##            if qtr1.checkWhite():
+##                GPIO.output(qtr1.LEDON_PIN, GPIO.HIGH)
+##            else:
+##                GPIO.output(qtr1.LEDON_PIN, GPIO.LOW)
+##
+##            
+##            if qtr2.checkWhite():
+##                GPIO.output(qtr2.LEDON_PIN, GPIO.HIGH)
+##            else:
+##                GPIO.output(qtr2.LEDON_PIN, GPIO.LOW)
+##        
+##	
+##
+##    except KeyboardInterrupt:
+##        GPIO.cleanup()
+>>>>>>> master
