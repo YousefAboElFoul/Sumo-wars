@@ -10,10 +10,16 @@ line3Pins = [A2] #Back left QTR
 line4Pins = [A3] #Back right QTR
 ledPin1 = 16 
 ledPin2 = 18
-motor1FPin = 13 # Left motor input 1
-motor1BPin = 15 # Left motor input 2
-motor2FPin = 7 # Right motor input 1
-motor2BPin = 11 # Right motor input 2
+motor1FPin = 31 # Left motor input 1
+motor1BPin = 33 # Left motor input 2
+motor2FPin = 37 # Right motor input 1
+motor2BPin = 35 # Right motor input 2
+#set GPIO Pins-- for ultra sonic 
+GPIO_TRIGGER = 22
+GPIO_ECHO = 24
+switchPin = 7
+rotatetime = 0.5
+curState = False #used for initial switch 
 
 
 safetyDelay = 1 # For line detection before initiating rotation
@@ -41,19 +47,19 @@ m1B = gpio.PWM(motor1BPin,50) #Motor 1 reverse direction speed control
 m2F = gpio.PWM(motor2FPin,50) #Motor 2 forward direction speed control
 m2B = gpio.PWM(motor2BPin,50) #Motor 2 reverse direction speed control
 
-# Controls the motors setting
-def navigation (mode1, mode2, dc1, dc2):
-        mode1.ChangeDutyCycle(dc1)
-        mode2.ChangeDutyCycle(dc2)
-        time.sleep(0.01)
-        
-def B_brake(t):
-     counter = 0
-     while counter != t:
-        time.sleep(1)
-        counter += 1
-        nav(m1B, m2B, 100, 100) #Moving backward
 
+# Controls the motors setting
+##def navigation (mode1, mode2, dc1, dc2):
+##        mode1.ChangeDutyCycle(dc1)
+##        mode2.ChangeDutyCycle(dc2)
+##        time.sleep(0.01)
+
+def navigation (mode1a, mode1b,mode2a, mode2b):
+        GPIO.output(motor1FPin,mode1a)  
+        GPIO.output(motor1BPin,mode1b)  
+        GPIO.output(motor2FPin,mode2a)  
+        GPIO.output(motor2BPin,mode2b)  
+  
 #Forward in t seconds
 def Forward(t):
      counter = 0
@@ -165,7 +171,50 @@ def lineDetector(qtr1,qtr2,qtr3,qtr4):
 ##                        Forward(1) #Moving forward extra t second
 
 
+########################object detection##########################
 
+def distance():
+        # set Trigger to HIGH
+        GPIO.output(GPIO_TRIGGER, True)
+
+        # set Trigger after 0.01ms to LOW
+        time.sleep(0.00001)
+        GPIO.output(GPIO_TRIGGER, False)
+
+        StartTime = time.time()
+        StopTime = time.time()
+
+        # save StartTime
+        while GPIO.input(GPIO_ECHO) == 0:
+                StartTime = time.time()
+
+        # save time of arrival
+        while GPIO.input(GPIO_ECHO) == 1:
+                StopTime = time.time()
+        
+        # time difference between start and arrival
+        TimeElapsed = StopTime - StartTime
+        # multiply with the sonic speed (34300 cms)
+        # and divide by 2, because there and back
+        distance = (TimeElapsed*34300)/2
+
+        return distance
+#######################################################
+def detectobj():
+        dist = distance()
+        #if distance exists
+       
+        while dist>1000 or dist==0:
+                navigation(1,0,0,1)
+                time.sleep(rotatetime)
+                dist=distance()                               
+
+        # turn motors towards the distance
+        navigation (1,0,1,0)
+
+
+
+################################################
 if __name__ == "__main__":
     try:
         qtr1 = QTR_8RC(line1Pins)
@@ -173,11 +222,28 @@ if __name__ == "__main__":
         qtr3 = QTR_8RC(line3Pins)
         qtr4 = QTR_8RC(line4Pins)
 
+        GPIO.setup(switchPin,GPIO.INPUT)
+        
         print ("press CTRL + C to exit")
-
+        
+        #time - for - no echo
+        detectTime = time.time()
+        
         while 1:
-                lineDetector(qtr1,qtr2,qtr3,qtr4)     
-                navigation(m1F, m2F, 100, 100)
+                if GPIO.input(switchPin) == 1 and curState = False:
+                        time.sleep(3)
+                        curState = True
+
+                elif GPIO.input(switchPin) == 0 and curState = True:
+                        curState = False
+                        
+                while GPIO.input(switchPin) == 1 and curState = True:
+                        lineDetector(qtr1,qtr2,qtr3,qtr4)     
+                        #detectobj()
+                        navigation (1,0,1,0)
+                        
+                
+                        
 
     except KeyboardInterrupt:
         gpio.cleanup()
