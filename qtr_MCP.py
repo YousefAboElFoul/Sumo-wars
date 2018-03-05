@@ -5,7 +5,7 @@ from MCP23017 import *
 # program that uses the MCP23017 class
 mcp = MCP23017() # object for the MCP23017 class
 
-class QTR_8RC:
+class QTR_MCP:
     """ Class for reading values from Pololu QT8-8RC sensor array.
     """
  

@@ -1,27 +1,26 @@
-import RPi.GPIO as gpio
 import time
 from qtr_MCP import *
+from qtr import *
 
 gpio.setwarnings(False)
-        
-line1Pins = [B0,B1,B2,B3,B4] #Forward left QTR
-line2Pins = [A0] #Forward right QTR
-line3Pins = [A2] #Back left QTR
-line4Pins = [A3] #Back right QTR
-ledPin1 = 16 
-ledPin2 = 18
+
+qtrFL = None #Forward left QTR
+qtrFR = None #Forward right QTR
+qtrB = None  #Back QTR
+qtrFLPins = [B0,B1,B2,B3,B4,B5,B6,B7] #Forward left QTR
+qtrFRPins = [A0,A1,A2,A3,A4,A5,A6,A7] #Forward right QTR
+qtrBPins = [36,38,40] #Back left QTR
+ledPin1 = 16    #Used for debugging line sensors
+ledPin2 = 18    #Used for debugging line sensors
 motor1FPin = 31 # Left motor input 1
 motor1BPin = 33 # Left motor input 2
 motor2FPin = 37 # Right motor input 1
 motor2BPin = 35 # Right motor input 2
-#set GPIO Pins-- for ultra sonic 
-GPIO_TRIGGER = 22
+GPIO_TRIGGER = 22 # Ultrasonic pin
 GPIO_ECHO = 24
 switchPin = 7
 rotatetime = 0.5
-curState = False #used for initial switch 
-
-
+curState = False # used for initial switch
 safetyDelay = 1 # For line detection before initiating rotation
 
 gpio.setmode(gpio.BOARD)
@@ -55,100 +54,78 @@ m2B = gpio.PWM(motor2BPin,50) #Motor 2 reverse direction speed control
 ##        time.sleep(0.01)
 
 def navigation (mode1a, mode1b,mode2a, mode2b):
-        GPIO.output(motor1FPin,mode1a)  
-        GPIO.output(motor1BPin,mode1b)  
-        GPIO.output(motor2FPin,mode2a)  
-        GPIO.output(motor2BPin,mode2b)  
+        gpio.output(motor1FPin,mode1a)  
+        gpio.output(motor1BPin,mode1b)  
+        gpio.output(motor2FPin,mode2a)  
+        gpio.output(motor2BPin,mode2b)  
   
-#Forward in t seconds
-def Forward(t):
-     counter = 0
-     while counter != t:
-          time.sleep(1)
-          counter += 1
-          nav(m1F, m2F, 100, 100) #Moving Forward
+# Both motors push forward
+def forward():
+        navigation(1,0,1,0)
+        
+# Both motors push backward     
+def backward():
+        navigation(0,1,0,1)
+        
+# Rotate clockwise
+def rotateCW():
+        navigation(1, 0, 0, 1)
 
-#Rotate clockwise with time t
-def Rotate_clockwise(t):
-     counter = 0
-     while counter != t:
-          time.sleep(1)
-          counter += 1
-          nav(m1F, m2B, 100, 100) #Rotate
-
-#Rotate anti-clockwise with time 
-def Rotate_anti_clockwise(t):
-     counter = 0
-     while counter != t:
-          time.sleep(1)
-          counter += 1
-          nav(m1B, m2F, 100, 100) #Rotate
+# Rotate counter clockwise
+def rotateCCW():
+        navigation(0, 1, 1, 0)
           
-def lineDetector(qtr1,qtr2,qtr3,qtr4):
-        qtr1.read_sensors()            
-        qtr2.read_sensors()
-        qtr3.read_sensors()
-        qtr4.read_sensors()
+def lineDetector():
+        #global thread1
+        
+        qtrFL.read_sensors()            
+        qtrFR.read_sensors()
+        qtrB.read_sensors()
 
         #For debugging
-        qtr1.print_sensor_values()
+        qtrB.print_sensor_values()
 
-        
-        sensors = {'sen1': False, 'sen2': False, 'sen3': False, 'sen4': False}
-        sensors['sen1'] = qtr1.checkWhite()
-        sensors['sen2'] = qtr2.checkWhite()
-        sensors['sen3'] = qtr3.checkWhite()
-        sensors['sen4'] = qtr4.checkWhite()
+        sensors = {'sen1': False, 'sen2': False, 'sen3': False}
+        sensors['sen1'] = qtrFL.checkWhite()
+        sensors['sen2'] = qtrFR.checkWhite()
+        sensors['sen3'] = qtrB.checkWhite()
 
      
         # Case 1: sensor 1 or sensor 2: Line detected front left and front right
         if sensors['sen1'] or sensors['sen2']:
                 #LED activated to indicate sensor detection
                 gpio.output(ledPin1, gpio.HIGH)
-                #Brake and backup continiously as condition hold
-                navigation(m1B, m2B, 100, 100)
-
+                #Backup continiously as condition hold
+                backward()
                 #Check again and perform extra backup for security
                 startTime = time.time()
-                duration = 0
-                while duration < safetyDelay:
-                        duration = time.time() - startTime
-                        print (duration)
-                        qtr1.read_sensors()
-                        qtr2.read_sensors()
+                while time.time() - startTime < safetyDelay:
+                        qtrFL.read_sensors()
+                        qtrFR.read_sensors()
                         #For debugging
-                        qtr1.print_sensor_values()
+                        qtrFL.print_sensor_values()
                         #Reset timer if white line was detected again
-                        if qtr1.checkWhite() or qtr2.checkWhite():
+                        if qtrFL.checkWhite() or qtrFR.checkWhite():
                                 startTime = time.time()
 
-
-                #time.sleep(safetyDelay) #Backup and brake extra t second      
                 gpio.output(ledPin1, gpio.LOW)
-                    
 
-        # Case 2: sensor 3 and sensor 4: Line detected back right and back left
-        if sensors['sen3'] or sensors['sen4']:
+        # Case 2: sensor 3: Line detected back right and back left
+        if sensors['sen3']:
                 #LED activated to indicate sensor detection
                 gpio.output(ledPin2, gpio.HIGH)
                 #Moving forward continiously as condition hold
-                navigation(m1F, m2F, 100, 100)
+                forward()
                 #Check again and perform extra backup for security
                 startTime = time.time()
-                duration = 0
-                while duration < safetyDelay:
-                        duration = time.time() - startTime
-                        print (duration)
-                        qtr3.read_sensors()
-                        qtr4.read_sensors()
+                while time.time() - startTime < safetyDelay:
+                        qtrB.read_sensors()
                         #For debugging
-                        qtr3.print_sensor_values()
+                        qtrB.print_sensor_values()
                         #Reset timer if white line was detected again
-                        if qtr3.checkWhite() or qtr4.checkWhite():
+                        if qtrB.checkWhite():
                                 startTime = time.time()
                                 
-                #Check again and perform extra backup for security
-                time.sleep(safetyDelay) #Backup and brake extra t second      
                 gpio.output(ledPin2, gpio.LOW)
 
 
@@ -175,21 +152,21 @@ def lineDetector(qtr1,qtr2,qtr3,qtr4):
 
 def distance():
         # set Trigger to HIGH
-        GPIO.output(GPIO_TRIGGER, True)
+        gpio.output(GPIO_TRIGGER, True)
 
         # set Trigger after 0.01ms to LOW
         time.sleep(0.00001)
-        GPIO.output(GPIO_TRIGGER, False)
+        gpio.output(GPIO_TRIGGER, False)
 
         StartTime = time.time()
         StopTime = time.time()
 
         # save StartTime
-        while GPIO.input(GPIO_ECHO) == 0:
+        while gpio.input(GPIO_ECHO) == 0:
                 StartTime = time.time()
 
         # save time of arrival
-        while GPIO.input(GPIO_ECHO) == 1:
+        while gpio.input(GPIO_ECHO) == 1:
                 StopTime = time.time()
         
         # time difference between start and arrival
@@ -202,48 +179,43 @@ def distance():
 #######################################################
 def detectobj():
         dist = distance()
-        #if distance exists
-       
+        print (dist)
+        # No reasonable distance has been detected
         while dist>1000 or dist==0:
-                navigation(1,0,0,1)
+                rotateCW()
                 time.sleep(rotatetime)
                 dist=distance()                               
 
-        # turn motors towards the distance
-        navigation (1,0,1,0)
-
+        # Attack the detected object
+        forward()
 
 
 ################################################
 if __name__ == "__main__":
     try:
-        qtr1 = QTR_8RC(line1Pins)
-        qtr2 = QTR_8RC(line2Pins)
-        qtr3 = QTR_8RC(line3Pins)
-        qtr4 = QTR_8RC(line4Pins)
+        qtrFL = QTR_MCP(qtrFLPins)
+        qtrFR = QTR_MCP(qtrFRPins)
+        qtrB = QTR(qtrBPins)
 
-        GPIO.setup(switchPin,GPIO.INPUT)
+        gpio.setup(GPIO_TRIGGER,gpio.OUT)
+        gpio.setup(GPIO_ECHO,gpio.IN)
+        gpio.setup(switchPin,gpio.IN)
         
         print ("press CTRL + C to exit")
-        
+
         #time - for - no echo
         detectTime = time.time()
         
         while 1:
-                if GPIO.input(switchPin) == 1 and curState = False:
+                if gpio.input(switchPin) == 1 and curState == False:
                         time.sleep(3)
                         curState = True
 
-                elif GPIO.input(switchPin) == 0 and curState = True:
+                elif gpio.input(switchPin) == 0 and curState == True:
                         curState = False
                         
-                while GPIO.input(switchPin) == 1 and curState = True:
-                        lineDetector(qtr1,qtr2,qtr3,qtr4)     
-                        #detectobj()
-                        navigation (1,0,1,0)
+                while gpio.input(switchPin) == 1 and curState == True:
+                        lineDetector()     
                         
-                
-                        
-
     except KeyboardInterrupt:
         gpio.cleanup()

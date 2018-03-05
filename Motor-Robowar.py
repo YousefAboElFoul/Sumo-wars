@@ -5,40 +5,42 @@ import RPi.GPIO as GPIO
 import time
 GPIO.setmode(GPIO.BOARD) #Consider the label of GPIO, not the pin number
 
-m1pin1=3
-m1pin2=5
+motor1FPin=31
+motor1BPin=33
 
-m2pin1=11
-m2pin2=7
+motor2FPin=37
+motor2BPin=35
+
+def navigation (mode1a, mode1b,mode2a, mode2b):
+        GPIO.output(motor1FPin,mode1a)  
+        GPIO.output(motor1BPin,mode1b)  
+        GPIO.output(motor2FPin,mode2a)  
+        GPIO.output(motor2BPin,mode2b)
 
 #Motor 1 setup m1P -> 2, m1N -> 3, m1E -> 4
-GPIO.setup(m1pin1,GPIO.OUT) #Input 1
-GPIO.setup(m1pin2,GPIO.OUT) #Input 2
+GPIO.setup(motor1FPin,GPIO.OUT) #Input 1
+GPIO.setup(motor1BPin,GPIO.OUT) #Input 2
 
 #PWM setup for motor 1, 50 is frequency
-m1P = GPIO.PWM(m1pin1,50) #Motor 1 forward direction speed control
-m1N = GPIO.PWM(m1pin2,50) #Motor 1 reverse direction speed control
+m1P = GPIO.PWM(motor1FPin,50) #Motor 1 forward direction speed control
+m1N = GPIO.PWM(motor1BPin,50) #Motor 1 reverse direction speed control
 
 #Motor 2 setup m2P -> 2, m2N -> 3, m3E -> 4
-GPIO.setup(m2pin1,GPIO.OUT) #Input 3
-GPIO.setup(m2pin2,GPIO.OUT) #Input 4
+GPIO.setup(motor2FPin,GPIO.OUT) #Input 3
+GPIO.setup(motor2BPin,GPIO.OUT) #Input 4
 
 #PWM setup for motor 2
-m2P = GPIO.PWM(m2pin1,50) #Motor 2 forward direction speed control
-m2N = GPIO.PWM(m2pin2,50) #Motor 2 reverse direction speed control
+m2P = GPIO.PWM(motor2FPin,50) #Motor 2 forward direction speed control
+m2N = GPIO.PWM(motor2BPin,50) #Motor 2 reverse direction speed control
 
-#All Wheel Drive Forward, start 100% speed
-#Consider Tutsplus for Truth table
-#Code motor 1 and 2 overlap in order to match their RPM
-GPIO.output(m1pin1,GPIO.LOW)  #Motor 1 - Input 1 set to High
-GPIO.output(m1pin2,GPIO.HIGH) #Motor 2 - Input 3 set to High
-GPIO.output(m2pin1,GPIO.HIGH)   #Motor 1 - Input 2 set to Low
-GPIO.output(m2pin2,GPIO.LOW)  #Motor 2 - Input 4 set to Low
 
 try:
 
         while 1:
-                pass
+                navigation (1,0,0,1)
+                time.sleep (0.5)
+                navigation (0,0,0,0)
+                time.sleep (0.5)
 
 except KeyboardInterrupt:
         GPIO.cleanup()

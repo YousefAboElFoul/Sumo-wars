@@ -1,7 +1,7 @@
-import RPi.GPIO as GPIO
+import RPi.GPIO as gpio
 import time
 
-class QTR_8RC:
+class QTR:
     """ Class for reading values from Pololu QT8-8RC sensor array.
     """
  
@@ -29,23 +29,23 @@ class QTR_8RC:
             self.sensorValues[i] = self.READING_TIMEOUT
 
         for sensorPin in self.SENSOR_PINS:
-            GPIO.setup(sensorPin, GPIO.OUT)
-            GPIO.output(sensorPin, GPIO.HIGH)
+            gpio.setup(sensorPin, gpio.OUT)
+            gpio.output(sensorPin, gpio.HIGH)
 
         
         time.sleep(self.CHARGE_TIME)
 
         for sensorPin in self.SENSOR_PINS:
-            #GPIO.setup(sensorPin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-            GPIO.setup(sensorPin, GPIO.IN)
+            gpio.setup(sensorPin, gpio.IN, pull_up_down=gpio.PUD_DOWN)
+            #gpio.setup(sensorPin, gpio.IN)
 
 
-        startTime = time.clock()
+        startTime = time.time()
         duration = 0
         while duration < self.READING_TIMEOUT:
-            duration = time.clock() - startTime
+            duration = time.time() - startTime
             for i in range(0, self.NUM_SENSORS):
-                if GPIO.input(self.SENSOR_PINS[i]) == 0 and duration < self.sensorValues[i]:
+                if gpio.input(self.SENSOR_PINS[i]) == 0 and duration < self.sensorValues[i]:
                     self.sensorValues[i] = duration
 
             
@@ -60,32 +60,34 @@ class QTR_8RC:
             Prints out the sensor and it's current recorded reading.
         """
         for i in range(0, self.NUM_SENSORS):
-            print("sensor %d, reading %d" % (i, self.sensorValues[i]))
+            print("sensor %d, reading %f ms" % (i, self.sensorValues[i]*1000))
 
 ##if __name__ == "__main__":
 ##    try:
-##        GPIO.setmode(GPIO.BOARD)
-##        qtr1 = QTR_8RC([18],16)
-##        qtr2 = QTR_8RC([24],22)
-##
-##
+##        gpio.setmode(gpio.BOARD)
+##        qtr1 = QTR_8RC([18])
+##        qtr2 = QTR_8RC([24])
+##        ledPin1 = 16    #Used for debugging line sensors
+##        ledPin2 = 18    #Used for debugging line sensors
+##        gpio.setup(ledPin1, gpio.OUT)
+##        gpio.setup(ledPin2, gpio.OUT)
 ##        while 1:
 ##            qtr1.read_sensors()            
 ##            qtr2.read_sensors()
 ##            #qtr.print_sensor_values()
 ##        
 ##            if qtr1.checkWhite():
-##                GPIO.output(qtr1.LEDON_PIN, GPIO.HIGH)
+##                gpio.output(ledPin1, gpio.HIGH)
 ##            else:
-##                GPIO.output(qtr1.LEDON_PIN, GPIO.LOW)
+##                gpio.output(ledPin1, gpio.LOW)
 ##
 ##            
 ##            if qtr2.checkWhite():
-##                GPIO.output(qtr2.LEDON_PIN, GPIO.HIGH)
+##                gpio.output(ledPin2, gpio.HIGH)
 ##            else:
-##                GPIO.output(qtr2.LEDON_PIN, GPIO.LOW)
+##                gpio.output(ledPin2, gpio.LOW)
 ##        
 ##	
 ##
 ##    except KeyboardInterrupt:
-##        GPIO.cleanup()
+##        gpio.cleanup()
